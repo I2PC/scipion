@@ -28,7 +28,7 @@
 # *
 # **************************************************************************
 
-from os.path import exists, dirname, join, getmtime, exists
+from os.path import exists, dirname, join, getmtime
 from datetime import datetime
 from collections import OrderedDict
 
@@ -631,6 +631,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         return newItemDict, streamClosed
 
     def _updateOutputCTFSet(self, micList, streamMode):
+        doneFailed = []
         micDoneList = [mic for mic in micList]
         # Do no proceed if there is not micrograph ready
         if not micDoneList:
@@ -656,9 +657,12 @@ class ProtCTFMicrographs(ProtMicrographs):
                 outputCtf.append(ctf)
             except:
                 print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
+                doneFailed.append(mic)
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)
+        if doneFailed:
+            self._writeFailedList(doneFailed)
 
         if firstTime:  # define relation just onceget
             # Using a pointer to define the relations is more robust to
@@ -714,6 +718,9 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _getAllDone(self):
         return self._getExtraPath('DONE', 'all.TXT')
 
+    def _getAllFailed(self):
+        return self._getExtraPath('FAILED_all.TXT')
+
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
         return self._getTmpPath('mic_%04d' % mic.getObjId())
@@ -722,6 +729,21 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Return the file that is used as a flag of termination. """
         return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
 
+    def _writeFailedList(self, micList):
+        """ Write to a text file the items that have failed. """
+        with open(self._getAllFailed(), 'a') as f:
+            for mic in micList:
+                f.write('%d\n' % mic.getObjId())
+
+    def _readFailedList(self):
+        """ Read from a text file the id's of the items that have failed. """
+        failedFile = self._getAllFailed()
+        failedList = []
+        if exists(failedFile):
+            with open(failedFile) as f:
+                failedList += [int(line.strip()) for line in f]
+
+        return failedList
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
