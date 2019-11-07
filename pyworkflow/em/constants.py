@@ -141,3 +141,7 @@ SCIPION_SYM_NAME[SYM_I2n3] = 'I2n3'
 SCIPION_SYM_NAME[SYM_I2n3r] = 'I2n3r'
 SCIPION_SYM_NAME[SYM_I2n5] = 'I2n5'
 SCIPION_SYM_NAME[SYM_I2n5r] = 'I2n5r'
+
+#PDB routine to convert atomic structure files (pdb to cif, cif to mmcif, cif to pdb)
+#https://sw-tools.rcsb.org/apps/MAXIT/index.html
+MAXIT = 'maxit'

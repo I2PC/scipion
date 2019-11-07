@@ -35,7 +35,10 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import FSC
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler, toCIF
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler, toCIF, fromPDBToCIF
+import pyworkflow.utils as pwutils
+from pyworkflow.utils.path import copyFile
+from pyworkflow.em import Volume
 
 
 class ProtExportEMDB(EMProtocol):
@@ -45,7 +48,12 @@ class ProtExportEMDB(EMProtocol):
     _program = ""
     _lastUpdateVersion = VERSION_1_2
     VOLUMENAME = 'volume.mrc'
+    HALF1NAME = 'half1.mrc'
+    HALF2NAME = 'half2.mrc'
     COORDINATEFILENAME = 'coordinates.cif'
+    MASKFILENAME = 'mask.mrc'
+    MAXIT = 'maxit'
+    FSC = "fsc_%02d.xml"
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -64,6 +72,10 @@ class ProtExportEMDB(EMProtocol):
                       label="Atomic structure to export", allowsNull=True,
                       pointerClass='AtomStruct',
                       help='This atomic structure will be exported using mmCIF format')
+        form.addParam('exportMask', params.PointerParam,
+                      label="Mask to export", allowsNull=True,
+                      pointerClass='VolumeMask',
+                      help='This mask will be exported using mrc format')
         form.addParam('filesPath', params.PathParam, important=True,
                       label="Export to directory",
                       help="Directory where the files will be generated.")
@@ -73,6 +85,8 @@ class ProtExportEMDB(EMProtocol):
         self._insertFunctionStep('exportVolumeStep')
         self._insertFunctionStep('exportFSCStep')
         self._insertFunctionStep('exportAtomStructStep')
+        self._insertFunctionStep('exportMaskStep')
+        self._createOutPut()
 
     #--------------------------- STEPS functions --------------------------------------------
 
@@ -87,6 +101,12 @@ class ProtExportEMDB(EMProtocol):
         ih = ImageHandler()
         ih.convert(self.exportVolume.get().getLocation(),
                    os.path.join(dirName, self.VOLUMENAME))
+        if self.exportVolume.get().getHalfMaps():
+            half1Name = self.exportVolume.get().getHalfMaps().split(",")[0]
+            ih.convert(half1Name, os.path.join(dirName, self.HALF1NAME))
+
+            half2Name = self.exportVolume.get().getHalfMaps().split(",")[1]
+            ih.convert(half2Name, os.path.join(dirName, self.HALF2NAME))
 
     def exportFSCStep(self):
         exportFSC = self.exportFSC.get()
@@ -100,7 +120,7 @@ class ProtExportEMDB(EMProtocol):
         for i, exportFSC in enumerate(fscSet):
 
             x,y = exportFSC.getData()
-            fnFSC = os.path.join(dirName, "fsc_%02d.xml" % i)
+            fnFSC = os.path.join(dirName, self.FSC % i)
             fo = open(fnFSC, "w")
             fo.write('<fsc title="FSC(%s)" xaxis="Resolution (A-1)" '
                      'yaxis="Correlation Coefficient">\n' %
@@ -115,17 +135,30 @@ class ProtExportEMDB(EMProtocol):
             fo.close()
 
     def exportAtomStructStep(self):
-        exportAtomStruct = self.exportAtomStruct.get()
-        originStructPath = exportAtomStruct.getFileName()
-        dirName = self.filesPath.get()
-        destinyStructPath = os.path.join(dirName, self.COORDINATEFILENAME)
-        if originStructPath.endswith(".cif") or originStructPath.endswith(".mmcif"):
-            h = AtomicStructHandler()
-            h.read(originStructPath)
-            h.write(destinyStructPath)
-        else:
-            toCIF(originStructPath, destinyStructPath)
+        if self.exportAtomStruct.get() is not None:
+            exportAtomStruct = self.exportAtomStruct.get()
+            originStructPath = exportAtomStruct.getFileName()
+            dirName = self.filesPath.get()
+            destinyStructPath = os.path.join(dirName, self.COORDINATEFILENAME)
+            if str(originStructPath) != destinyStructPath:
+                if originStructPath.endswith(".pdb"):
+                    # convert pdb to cif by using maxit program
+                    destinyStructPath = destinyStructPath.replace(".pdb", ".cif")
+                    log = self._log
+                    fromPDBToCIF(originStructPath, destinyStructPath, log)
+                elif originStructPath.endswith(".cif"):
+                    copyFile(originStructPath, destinyStructPath)
 
+    def exportMaskStep(self):
+        if self.exportMask.get() is not None:
+            exportMask = self.exportMask.get()
+            dirName = self.filesPath.get()
+            destinyMaskPath = os.path.join(dirName, self.MASKFILENAME)
+            ih = ImageHandler()
+            ih.convert(exportMask.getLocation(), destinyMaskPath)
+
+    def _createOutPut(self):
+        pass
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

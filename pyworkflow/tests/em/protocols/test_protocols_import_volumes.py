@@ -298,7 +298,7 @@ class TestImportVolumes(TestImportBase):
 
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program.
-        If xmipp not available o fails return False, else Tru"""
+        If xmipp not available o fails return False, else True"""
         try:
             xmipp3 = pwutils.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.Plugin.runXmippProgram(program, args)

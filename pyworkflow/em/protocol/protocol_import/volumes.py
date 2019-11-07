@@ -36,8 +36,8 @@ from pyworkflow.em.data import Transform
 from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
-import mmap
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler, fromPDBToCIF
+import pyworkflow.utils as pwutils
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -296,25 +296,19 @@ Format may be PDB or MMCIF"""
 
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
-        aSH = AtomicStructHandler()
 
         if str(atomStructPath) != str(localPath): # from local file
-            if atomStructPath.endswith(".pdb") or \
-                    atomStructPath.endswith(".ent"):
-                localPath = localPath.replace(".pdb", ".cif").\
-                    replace(".ent", ".cif")
-                # normalize input format
-                aSH.read(atomStructPath)
-                aSH.write(localPath)
-            elif atomStructPath.endswith(".cif"):
-                if aSH.checkLabelInFile(atomStructPath,
-                                        "_entity_poly_seq.entity_id") == False:
-                    # normalize input format
-                    aSH.read(atomStructPath)
-                    aSH.write(localPath)
-                else:
-                    copyFile(atomStructPath, localPath)
 
+            if atomStructPath.endswith(".pdb"):
+                # convert pdb to cif by using maxit program
+                log = self._log
+                localPath = localPath.replace(".pdb", ".cif")
+                fromPDBToCIF(atomStructPath, localPath, log)
+
+            elif atomStructPath.endswith(".cif"):
+                copyFile(atomStructPath, localPath)
+
+        localPath = relpath(localPath)
         pdb = AtomStruct()
         volume = self.inputVolume.get()
 

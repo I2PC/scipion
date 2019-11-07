@@ -34,6 +34,7 @@
 from __future__ import print_function
 import os
 import numpy
+import shutil
 from collections import defaultdict
 
 from Bio.PDB.Dice import ChainSelector
@@ -52,6 +53,8 @@ from .transformations import translation_from_matrix
 import mmap
 import re
 import hashlib
+from pyworkflow.em.constants import MAXIT
+import pyworkflow.utils as pwutils
 
 class OutOfChainsError(Exception):
     pass
@@ -699,3 +702,76 @@ def toCIF(inFileName, outCIFFile):
     else:
         print("ERROR (toCIF), Unknown file type for file = %s" % inFileName)
 
+
+def fromPDBToCIF(inFileName, outFileName, log):
+    # convert pdb to cif using maxit
+    args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 1'
+    log.info('Launching: ' + MAXIT + args)
+    # run in the background
+    pwutils.runJob(None, MAXIT, args)
+
+def fromCIFToPDB(inFileName, outFileName, log):
+    # convert cif to pdb using maxit
+    args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 2'
+    log.info('Launching: ' + MAXIT + args)
+    # run in the background
+    pwutils.runJob(None, MAXIT, args)
+
+def fromCIFTommCIF(inFileName, outFileName, log):
+    # convert pdb to cif using maxit
+    args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 8'
+    log.info('Launching: ' + MAXIT + args)
+    # run in the background
+    pwutils.runJob(None, MAXIT, args)
+
+def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None):
+    try:
+        # raise ValueError('force maxit to be executed')  # delete this line
+        runEnvirom(program, args, cwd=cwd)
+    except:
+        # something went wrong, may be bad atomStruct format
+        log.info('retry with maxit conversion')
+
+        for i, atomStructName in enumerate(listAtomStruct):
+            if atomStructName.endswith(".pdb.cif"):
+                aSH = AtomicStructHandler()
+                aSH.read(atomStructName)
+                aSH.write(atomStructName)
+                # if clean_dir is not None:
+                #     if os.path.exists(clean_dir):
+                #         shutil.rmtree(clean_dir, ignore_errors=True)
+
+                runEnvirom(program, args, cwd=cwd)
+            else:
+                try:
+                    if atomStructName.endswith(".pdb"):
+                        newAtomStructName = os.path.join(cwd, "retrypdb%d.cif"%i)
+                        fromPDBToCIF(atomStructName, newAtomStructName, log)
+                        _args = args.replace(atomStructName, newAtomStructName)
+                        runEnvirom(program, _args, cwd=cwd)
+                    elif atomStructName.endswith(".cif"):
+                        newAtomStructName = os.path.join(cwd, "retrycif%d.cif" % i)
+                        fromCIFTommCIF(atomStructName, newAtomStructName, log)
+                        _args = args.replace(atomStructName, newAtomStructName)
+                        try:
+                            runEnvirom(program, _args, cwd=cwd)
+                        except:
+                            newAtomStructName = os.path.join(cwd, "retrycif%d.pdb" % i)
+                            fromCIFToPDB(atomStructName, newAtomStructName, log)
+                            _args = args.replace(atomStructName, newAtomStructName)
+                            runEnvirom(program, _args, cwd=cwd)
+                except:
+                    # biopython conversion
+                    aSH = AtomicStructHandler()
+                    if atomStructName.endswith(".pdb") or atomStructName.endswith(".ent"):
+                        newAtomStructName = atomStructName.replace(".pdb", ".cif").\
+                            replace(".ent", ".cif")
+                    else:
+                        newAtomStructName = atomStructName
+                    try:
+                        aSH.read(newAtomStructName)
+                        aSH.write(newAtomStructName)
+                        _args = args.replace(atomStructName, newAtomStructName)
+                        runEnvirom(program, _args, cwd=cwd)
+                    except:
+                        print("CIF file standarization failed.")
