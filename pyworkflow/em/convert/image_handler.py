@@ -492,4 +492,12 @@ class ImageHandler(object):
                               % (inputFn, outputFn, scaleFactor))
 
 
+    @classmethod
+    def scaleSpline(cls, inputFn, outputFn, Xdim, Ydim):
+        """ Scale an image by cropping in Fourier space. """
+        # TODO: Avoid using xmipp program for this
+        cls.__runXmippProgram("xmipp_image_resize",
+                              "-i %s -o %s --dim %d %d --interp spline"
+                              % (inputFn, outputFn, Xdim, Ydim))
+
 DT_FLOAT = ImageHandler.DT_FLOAT
