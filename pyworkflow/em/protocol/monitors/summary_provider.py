@@ -123,12 +123,14 @@ class SummaryProvider(TreeProvider):
         else:
             timeF = datetime.datetime.utcnow()
 
-        time = (timeF-time0).total_seconds() / 3600.0  # in hours
-
-        rate = outSet.getSize() / time  # items/hour
-
-        if time < DELTA_TIME*2 or finished:
+        time = (timeF-time0).total_seconds() / 3600.0  # in hour
+        if time > 0 and (time < DELTA_TIME*2 or finished):
+            rate = outSet.getSize() / time  # items/hour
             return '%.0f' % rate, NODATA_TREND_ICON
+        elif time == 0:
+            return '-'
+        else:
+            rate = outSet.getSize() / time  # items/hour   
 
         timeI = timeF - datetime.timedelta(hours=DELTA_TIME)
         timeIstr = timeI.strftime(pwobj.String.DATETIME_FORMAT)

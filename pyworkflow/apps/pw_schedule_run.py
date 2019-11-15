@@ -170,13 +170,16 @@ class RunScheduler():
 
             if not failedInputProtocols:
                 _updateProtocol(protocol, project)
-                if len(protocol.validate()) > 0:
+                validation = protocol.validate()
+                if len(validation) > 0:
                         missing = True
+                        _log("%s validation: %s" % (protocol.getObjLabel(), '; '.join(validation)))
                 elif not protocol.worksInStreaming():
                     for key, attr in protocol.iterInputAttributes():
                         pointer = attr.get()
                         if isinstance(pointer, Set) and pointer.isStreamOpen():
                             missing = True
+                            _log("Waiting for closing %s... (This protocol does not work in streaming)" % pointer)
                             break
 
                 if not missing:
@@ -192,6 +195,7 @@ class RunScheduler():
                     _updateProtocol(prot, project)
                     if prot.getStatus() not in stopStatuses:
                         wait = True
+                        _log("...waiting for %s" % prot)
 
             if not missing and not wait:
                 break

@@ -164,6 +164,10 @@ class ProtExtractParticles(ProtParticles):
         # Let's load input data for the already existing micrographs
         # before the streaming
         self.debug(">>> _insertAllSteps ")
+        for name, inObj in self.iterInputAttributes():
+            if inObj.isPointer() and inObj.get() is not None:
+                parentProt = self.getMapper().getParent(inObj.get())
+                self.getProject()._updateProtocol(parentProt)
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
         self.coordDict = {}
