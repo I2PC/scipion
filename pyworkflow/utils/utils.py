@@ -745,10 +745,11 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
                      "it could be a versions compatibility issue.")
 
     stackList = traceback.extract_stack()
-    if len(stackList) > 3:
-        callIdx = -3  # We use the most probable index as default
+    if len(stackList) > 4:
+        callIdx = -4  # We use the most probable index as default
         for idx, stackLine in enumerate(stackList):
-            if stackLine[0].endswith('/unittest/loader.py'):
+            if (stackLine[0].endswith('/unittest/loader.py') or
+                stackLine[0].endswith('importlib/__init__.py')):
                 callIdx = idx + 1
     else:
         callIdx = 0
@@ -769,20 +770,43 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
         print(raiseMsg)
 
 
-def importFromPlugin(module, method='', errorMsg='', doRaise=False):
+def tryImportFromPlugin(module, object=None, errorMsg='', doRaise=False):
     """ This method try to import either the method from the module/plugin
         or the whole module/plugin and returns what is imported if not fails.
         When the importation fails (due to the plugin or the method is not found),
         it prints a common message + optional errorMsg or
         it raise with the same message if doRaise is True.
-        """
+    """
     try:
-        if method == '':
+        if object is None:
             output = importlib.import_module(module)
         else:
-            output = getattr(importlib.import_module(module), method)
+            output = getattr(importlib.import_module(module), object)
         return output
     except Exception as e:
         plugName = module.split('.')[0]
-        errMsg = str(e) if errorMsg=='' else "%s. %s" % (str(e), errorMsg)
+        errMsg = str(e) if errorMsg == '' else "%s. %s" % (str(e), errorMsg)
         pluginNotFound(plugName, errMsg, doRaise)
+        return None
+
+
+def importFromPlugin(module, objects=None, errorMsg='', doRaise=False):
+    """ This method try to import either a list of objects from the module/plugin
+        or the whole module/plugin and returns what is imported if not fails.
+        When the importation fails (due to the plugin or the object is not found),
+        it prints a common message + optional errorMsg or
+        it raise an error with the same message if doRaise is True.
+
+         -> Usages: plugin1 = importFromPlugin('plugin1')  # the whole plugin
+                    pl1Cons = importFromPlugin('plugin1.constants')  # a plugin's module
+                    p1prot1 = importFromPlugin('plugin1.protocols', 'prot1')
+                    pt2, pt2, ... = importFromPlugin('plugin1.protocols',
+                                                     ['pt1', 'pt2', ...])
+    """
+    if objects is None or isinstance(objects, basestring):
+        output = tryImportFromPlugin(module, objects, errorMsg, doRaise)
+    else:
+        output = tuple()
+        for obj in objects:
+            output += (tryImportFromPlugin(module, obj, errorMsg, doRaise),)
+    return output
