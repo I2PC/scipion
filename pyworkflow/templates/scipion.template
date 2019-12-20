@@ -117,10 +117,10 @@ JAVA_MAX_MEMORY = 2
 
 # Modules to compile
 GTEST = False
-CUDA = False
+CUDA = True
 DEBUG = False
 MATLAB = False
-OPENCV = True
+OPENCV = False
 
 # two version of opencv are allowed: 2.4.13 (Ubuntu <=16), 3.4.1 (Ubuntu >16)
 OPENCV_VER = 2.4.13
