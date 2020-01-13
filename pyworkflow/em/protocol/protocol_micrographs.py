@@ -655,11 +655,8 @@ class ProtCTFMicrographs(ProtMicrographs):
             try:
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
-            except Exception as e:
+            except:
                 print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
-                print(e)
-                import traceback
-                traceback.print_exc()
                 doneFailed.append(mic)
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
