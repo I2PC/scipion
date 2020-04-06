@@ -689,26 +689,13 @@ def createAlignmentPlot(meanX, meanY):
 
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.axis('equal')
+    ax.axis('auto')
     ax.set_title('Cartesian representation')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
-    
-    # Max range of the plot of the two coordinates
-    plotRange = max(max(meanX)-min(meanX), max(meanY)-min(meanY))
-    i = 1 
-    skipLabels = ceil(len(meanX) / 10.0)
-    for x, y in izip(meanX, meanY):
-        if i % skipLabels == 0:
-            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i))
-        i += 1
 
     ax.plot(meanX, meanY, color='b')
     ax.plot(meanX, meanY, 'yo')
-
-    # setting the plot windows to properly see the data
-    ax.axis([min(meanX)-0.1*plotRange, max(meanX)+0.1*plotRange, 
-             min(meanY)-0.1*plotRange, max(meanY)+0.1*plotRange])
     
     plotter.tightLayout()
 
