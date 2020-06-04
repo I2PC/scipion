@@ -292,6 +292,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
         movieDoneFn = self._getMovieDone(movie)
+        
+        #AJ NEW
+        movie.setFileName(os.path.join('/home/ajimenez/data/data_covid/covid19', movieName))
+        movieFolder = self._getOutputMovieFolder(movie)
+        movieFn = movie.getFileName()
+        movieName = basename(movieFn)
+        movieDoneFn = self._getMovieDone(movie)
+        #END AJ
 
         if (self.isContinued() and os.path.exists(movieDoneFn)):
             self.info("Skipping movie: %s, seems to be done" % movieFn)

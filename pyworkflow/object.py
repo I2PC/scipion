@@ -1241,13 +1241,27 @@ class Set(OrderedObject):
         """ Get the value of a property and
         set its value as an object attribute.
         """
-        self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
+        myAtt = self.getProperty(propertyName, defaultValue)
+        if myAtt is not None:
+            self.setAttributeValue(propertyName, myAtt)
+        else:
+            print("ESTO ES NONE", propertyName)
         
     def loadAllProperties(self):
         """ Retrieve all properties stored by the mapper. """
         for key in self._getMapper().getPropertyKeys():
             if key != 'self':
                 self.loadProperty(key)
+        #self.loadProperty('_xmipp_shiftX')
+        #self.loadProperty('_xmipp_shiftY')
+        #self.loadProperty('_xmipp_angleTilt')
+        #self.loadProperty('_xmipp_maxCC')
+        #self.loadProperty('_xmipp_maxCCPerc')
+        #self.loadProperty('_xmipp_weight')
+        #self.loadProperty('_xmipp_angleTemp')
+        #self.loadProperty('_classId')
+        #self.loadProperty('_xmipp_angleRot')
+        #self.loadProperty('_xmipp_anglePsi')
         
     def getIdSet(self):
         """ Return a Python set object containing all ids. """
